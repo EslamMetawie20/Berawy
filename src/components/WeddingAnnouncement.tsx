@@ -1,125 +1,279 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { WEDDING_DETAILS } from '../constants/wedding';
+import framePng from '../assets/frame.png';
+
+interface TimeLeft {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isPassed: boolean;
+}
 
 export const WeddingAnnouncement: React.FC = () => {
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isPassed: false,
+  });
+
+  useEffect(() => {
+    const calculateTimeLeft = (): TimeLeft => {
+      const targetDate = new Date(WEDDING_DETAILS.targetIsoDate).getTime();
+      const now = new Date().getTime();
+      const difference = targetDate - now;
+
+      if (difference <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0, isPassed: true };
+      }
+
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+        isPassed: false,
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <section
       id="announcement"
       style={{
         position: 'relative',
         zIndex: 2,
-        padding: '80px 24px 60px',
+        padding: '50px 14px 60px',
         backgroundColor: '#FAF7F2',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        textAlign: 'center',
+        justifyContent: 'center',
       }}
     >
+      {/* Container sizing based on frame.png (1122 x 1402 ratio) */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 25 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-50px' }}
-        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        viewport={{ once: true, margin: '-40px' }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         style={{
-          maxWidth: '540px',
+          position: 'relative',
+          maxWidth: '430px',
           width: '100%',
+          aspectRatio: '1122 / 1402',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0',
+          overflow: 'hidden',
         }}
       >
-        <span
-          className="font-sans"
+        {/* User's Exact Frame Image (frame.png) */}
+        <img
+          src={framePng}
+          alt="Wedding Frame"
           style={{
-            fontSize: '0.8rem',
-            letterSpacing: '0.3em',
-            fontWeight: 500,
-            textTransform: 'uppercase',
-            color: '#C5A089',
-            display: 'block',
-            marginBottom: '20px',
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            pointerEvents: 'none',
+            zIndex: 1,
           }}
-        >
-          The Day We Say I Do
-        </span>
+        />
 
-        <p
-          className="font-serif"
-          style={{
-            fontSize: 'clamp(1.25rem, 4vw, 1.65rem)',
-            lineHeight: 1.6,
-            fontWeight: 300,
-            color: '#2C2825',
-            margin: '0 auto 48px',
-            maxWidth: '440px',
-            fontStyle: 'italic',
-          }}
-        >
-          With love in our hearts, we invite you to celebrate the beginning of our forever.
-        </p>
-
-        {/* Editorial Date Block */}
+        {/* --- Inner Space Inside frame.png --- */}
         <div
           style={{
+            position: 'relative',
+            zIndex: 3,
+            width: '68%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '36px 24px',
-            backgroundColor: '#FDFBF7',
-            borderRadius: '16px',
-            border: '1px solid rgba(216, 180, 166, 0.3)',
-            boxShadow: '0 10px 35px rgba(44, 40, 37, 0.03)',
+            textAlign: 'center',
+            padding: '10px',
           }}
         >
-          <span
-            className="font-sans"
-            style={{
-              fontSize: '0.9rem',
-              letterSpacing: '0.35em',
-              fontWeight: 600,
-              color: '#80766E',
-              marginBottom: '4px',
-            }}
-          >
-            FRIDAY
-          </span>
-
-          <span
+          {/* ONLY 1: Invitation Sentence */}
+          <p
             className="font-serif"
             style={{
-              fontSize: 'clamp(3.8rem, 12vw, 5.5rem)',
-              lineHeight: 1,
+              fontSize: 'clamp(0.92rem, 3.2vw, 1.2rem)',
+              lineHeight: 1.55,
               fontWeight: 300,
+              fontStyle: 'italic',
               color: '#2C2825',
-              margin: '8px 0',
+              margin: '0 0 24px 0',
+              maxWidth: '260px',
             }}
           >
-            25
-          </span>
+            With love in our hearts, we invite you to celebrate the beginning of our forever.
+          </p>
 
-          <span
-            className="font-sans"
+          {/* Delicate Divider Line */}
+          <div
             style={{
-              fontSize: '1rem',
-              letterSpacing: '0.35em',
-              fontWeight: 500,
-              color: '#C5A089',
-              marginBottom: '4px',
+              width: '24px',
+              height: '1px',
+              backgroundColor: 'rgba(178, 155, 128, 0.5)',
+              marginBottom: '24px',
             }}
-          >
-            SEPTEMBER
-          </span>
+          />
 
-          <span
-            className="font-sans"
-            style={{
-              fontSize: '0.9rem',
-              letterSpacing: '0.25em',
-              fontWeight: 400,
-              color: '#5A524C',
-            }}
-          >
-            2026
-          </span>
+          {/* ONLY 2: Live Countdown Timer */}
+          <div style={{ width: '100%', maxWidth: '270px' }}>
+            {timeLeft.isPassed ? (
+              <h3
+                className="font-script"
+                style={{
+                  fontSize: 'clamp(1.8rem, 6vw, 2.6rem)',
+                  color: '#213024',
+                  fontWeight: 400,
+                  margin: 0,
+                }}
+              >
+                Our Forever Has Begun
+              </h3>
+            ) : (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
+                  gap: '6px',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {/* Days */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <span
+                    className="font-serif"
+                    style={{
+                      fontSize: 'clamp(1.4rem, 4.4vw, 1.95rem)',
+                      fontWeight: 700,
+                      color: '#2C2825',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {String(timeLeft.days).padStart(2, '0')}
+                  </span>
+                  <span
+                    className="font-sans"
+                    style={{
+                      fontSize: '0.62rem',
+                      letterSpacing: '0.18em',
+                      color: '#917449',
+                      marginTop: '4px',
+                      textTransform: 'uppercase',
+                      fontWeight: 700,
+                    }}
+                  >
+                    Days
+                  </span>
+                </div>
+
+                {/* Hours */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <span
+                    className="font-serif"
+                    style={{
+                      fontSize: 'clamp(1.4rem, 4.4vw, 1.95rem)',
+                      fontWeight: 700,
+                      color: '#2C2825',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {String(timeLeft.hours).padStart(2, '0')}
+                  </span>
+                  <span
+                    className="font-sans"
+                    style={{
+                      fontSize: '0.62rem',
+                      letterSpacing: '0.18em',
+                      color: '#917449',
+                      marginTop: '4px',
+                      textTransform: 'uppercase',
+                      fontWeight: 700,
+                    }}
+                  >
+                    Hours
+                  </span>
+                </div>
+
+                {/* Minutes */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <span
+                    className="font-serif"
+                    style={{
+                      fontSize: 'clamp(1.4rem, 4.4vw, 1.95rem)',
+                      fontWeight: 700,
+                      color: '#2C2825',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {String(timeLeft.minutes).padStart(2, '0')}
+                  </span>
+                  <span
+                    className="font-sans"
+                    style={{
+                      fontSize: '0.62rem',
+                      letterSpacing: '0.18em',
+                      color: '#917449',
+                      marginTop: '4px',
+                      textTransform: 'uppercase',
+                      fontWeight: 700,
+                    }}
+                  >
+                    Minutes
+                  </span>
+                </div>
+
+                {/* Seconds */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <span
+                    className="font-serif"
+                    style={{
+                      fontSize: 'clamp(1.4rem, 4.4vw, 1.95rem)',
+                      fontWeight: 700,
+                      color: '#2C2825',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {String(timeLeft.seconds).padStart(2, '0')}
+                  </span>
+                  <span
+                    className="font-sans"
+                    style={{
+                      fontSize: '0.62rem',
+                      letterSpacing: '0.18em',
+                      color: '#917449',
+                      marginTop: '4px',
+                      textTransform: 'uppercase',
+                      fontWeight: 700,
+                    }}
+                  >
+                    Seconds
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
     </section>
