@@ -3,16 +3,24 @@ import { motion, AnimatePresence, useScroll } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { WEDDING_DETAILS } from '../constants/wedding';
 
-export const DiscreetMenu: React.FC = () => {
+interface DiscreetMenuProps {
+  enabled?: boolean;
+}
+
+export const DiscreetMenu: React.FC<DiscreetMenuProps> = ({ enabled = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showMenuButton, setShowMenuButton] = useState(false);
   const { scrollY } = useScroll();
 
   useEffect(() => {
+    if (!enabled) {
+      setShowMenuButton(false);
+      return;
+    }
     return scrollY.on('change', (latest) => {
-      setShowMenuButton(latest > 240);
+      setShowMenuButton(enabled && latest > 240);
     });
-  }, [scrollY]);
+  }, [scrollY, enabled]);
 
   const scrollTo = (id: string) => {
     setIsOpen(false);

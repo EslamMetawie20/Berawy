@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DiscreetMenu } from './components/DiscreetMenu';
 import { FloatingParticles } from './components/FloatingParticles';
 import { Hero } from './components/Hero';
@@ -11,6 +11,8 @@ import { DressCodeAndActions } from './components/DressCodeAndActions';
 import { Footer } from './components/Footer';
 
 export const App: React.FC = () => {
+  const [hasEnded, setHasEnded] = useState(false);
+
   return (
     <div
       style={{
@@ -21,8 +23,8 @@ export const App: React.FC = () => {
         overflowX: 'hidden',
       }}
     >
-      {/* Single Discreet Floating Menu */}
-      <DiscreetMenu />
+      {/* Single Discreet Floating Menu (enabled only after video has finished) */}
+      <DiscreetMenu enabled={hasEnded} />
 
       {/* Floating Dust/Light Particles (subtle background depth) */}
       <FloatingParticles />
@@ -30,28 +32,38 @@ export const App: React.FC = () => {
       {/* Main Continuous Single-Page Flow */}
       <main>
         {/* Section 1: Hero */}
-        <Hero />
+        <Hero onEnded={() => setHasEnded(true)} />
 
-        {/* Section 2: Announcement & Date */}
-        <WeddingAnnouncement />
+        {/* Lower page content: locked and revealed only after opening video finishes */}
+        <div
+          id="invitation-content"
+          style={{
+            opacity: hasEnded ? 1 : 0,
+            transition: 'opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
+            pointerEvents: hasEnded ? 'auto' : 'none',
+          }}
+        >
+          {/* Section 2: Announcement & Date */}
+          <WeddingAnnouncement />
 
-        {/* Section 3: Countdown */}
-        <Countdown />
+          {/* Section 3: Countdown */}
+          <Countdown />
 
-        {/* Section 4: Event Timeline */}
-        <Timeline />
+          {/* Section 4: Event Timeline */}
+          <Timeline />
 
-        {/* Section 5: Location / Venue */}
-        <Venue />
+          {/* Section 5: Location / Venue */}
+          <Venue />
 
-        {/* Section 6: Quote & Names */}
-        <QuoteAndNames />
+          {/* Section 6: Quote & Names */}
+          <QuoteAndNames />
 
-        {/* Section 7: Dress Code, RSVP, Calendar & Share */}
-        <DressCodeAndActions />
+          {/* Section 7: Dress Code, RSVP, Calendar & Share */}
+          <DressCodeAndActions />
 
-        {/* Section 8: Final Farewell */}
-        <Footer />
+          {/* Section 8: Final Farewell */}
+          <Footer />
+        </div>
       </main>
     </div>
   );

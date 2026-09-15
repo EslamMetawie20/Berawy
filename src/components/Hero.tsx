@@ -1,17 +1,87 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, RotateCcw, VolumeX } from 'lucide-react';
+import { Play, VolumeX, ChevronDown } from 'lucide-react';
 
-export const Hero: React.FC = () => {
+interface HeroProps {
+  onEnded?: () => void;
+}
+
+export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Playback & UI States
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-  const [isEnded, setIsEnded] = useState(false);
+  const [hasEnded, setHasEnded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showControlsHint, setShowControlsHint] = useState(false);
+
+  // Strict scroll lock while video has not completed (hasEnded === false)
+  useEffect(() => {
+    if (!hasEnded) {
+      // Save existing inline styles
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      const originalHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalBodyOverscroll = document.body.style.overscrollBehavior;
+      const originalBodyTouchAction = document.body.style.touchAction;
+
+      // Lock scrolling on html and body
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.overscrollBehavior = 'none';
+      document.body.style.overflow = 'hidden';
+      document.body.style.overscrollBehavior = 'none';
+      document.body.style.touchAction = 'none';
+
+      // Prevent wheel scrolling
+      const preventWheel = (e: WheelEvent) => {
+        e.preventDefault();
+      };
+
+      // Prevent touch scroll dragging on mobile
+      const preventTouch = (e: TouchEvent) => {
+        // Prevent default touch movement to avoid dragging page under hero
+        e.preventDefault();
+      };
+
+      // Prevent keyboard navigation scrolling
+      const preventKeys = (e: KeyboardEvent) => {
+        const scrollKeys = [
+          'ArrowUp',
+          'ArrowDown',
+          'PageUp',
+          'PageDown',
+          'Home',
+          'End',
+          ' ',
+          'Space',
+        ];
+        if (scrollKeys.includes(e.key)) {
+          e.preventDefault();
+        }
+      };
+
+      window.addEventListener('wheel', preventWheel, { passive: false });
+      window.addEventListener('touchmove', preventTouch, { passive: false });
+      window.addEventListener('keydown', preventKeys, { passive: false });
+
+      // Keep viewport pinned to the top
+      window.scrollTo(0, 0);
+
+      return () => {
+        document.documentElement.style.overflow = originalHtmlOverflow;
+        document.documentElement.style.overscrollBehavior = originalHtmlOverscroll;
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.overscrollBehavior = originalBodyOverscroll;
+        document.body.style.touchAction = originalBodyTouchAction;
+
+        window.removeEventListener('wheel', preventWheel);
+        window.removeEventListener('touchmove', preventTouch);
+        window.removeEventListener('keydown', preventKeys);
+      };
+    }
+  }, [hasEnded]);
 
   // Attempt to play video with audio after user interaction
   const handlePlay = useCallback(async () => {
@@ -19,7 +89,6 @@ export const Hero: React.FC = () => {
     if (!video) return;
 
     setHasError(false);
-    setIsEnded(false);
 
     try {
       // Primary intent: play with unmuted audio after user gesture
@@ -57,11 +126,9 @@ export const Hero: React.FC = () => {
   const handleContainerClick = () => {
     if (!hasStarted) {
       handlePlay();
-    } else if (isEnded) {
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0;
-      }
-      handlePlay();
+    } else if (hasEnded) {
+      // Video has ended, scrolling is unlocked; do not restart video
+      return;
     } else if (isPlaying) {
       handlePause();
       setShowControlsHint(true);
@@ -71,7 +138,7 @@ export const Hero: React.FC = () => {
     }
   };
 
-  // Keyboard accessibility (Space / Enter)
+  // Keyboard accessibility on hero region
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
@@ -79,7 +146,7 @@ export const Hero: React.FC = () => {
     }
   };
 
-  // Sound toggle (primarily for the muted fallback case)
+  // Sound toggle (for muted fallback case)
   const toggleSound = (e: React.MouseEvent) => {
     e.stopPropagation();
     const video = videoRef.current;
@@ -90,36 +157,28 @@ export const Hero: React.FC = () => {
     setIsMuted(newMuted);
   };
 
-  // Replay handler
-  const handleReplay = (e: React.MouseEvent) => {
+  // Fallback continue to invitation when video cannot play
+  const handleContinueToInvitation = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const video = videoRef.current;
-    if (video) {
-      video.currentTime = 0;
-      handlePlay();
+    setHasEnded(true);
+    if (onEndedProp) {
+      onEndedProp();
     }
   };
 
-  // Sync state if video pauses/plays via external events
+  // Video event synchronization
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
-    const onEnded = () => {
+    const onVideoEnd = () => {
       setIsPlaying(false);
-      setIsEnded(true);
-
-      // Keep final frame visible briefly, then smoothly reveal next section if user hasn't scrolled
-      setTimeout(() => {
-        if (typeof window !== 'undefined' && window.scrollY < 80) {
-          const nextSection = document.getElementById('announcement');
-          if (nextSection) {
-            nextSection.scrollIntoView({ behavior: 'smooth' });
-          }
-        }
-      }, 1400);
+      setHasEnded(true);
+      if (onEndedProp) {
+        onEndedProp();
+      }
     };
     const onError = () => {
       setHasError(true);
@@ -128,16 +187,16 @@ export const Hero: React.FC = () => {
 
     video.addEventListener('play', onPlay);
     video.addEventListener('pause', onPause);
-    video.addEventListener('ended', onEnded);
+    video.addEventListener('ended', onVideoEnd);
     video.addEventListener('error', onError);
 
     return () => {
       video.removeEventListener('play', onPlay);
       video.removeEventListener('pause', onPause);
-      video.removeEventListener('ended', onEnded);
+      video.removeEventListener('ended', onVideoEnd);
       video.removeEventListener('error', onError);
     };
-  }, []);
+  }, [onEndedProp]);
 
   return (
     <section
@@ -154,7 +213,7 @@ export const Hero: React.FC = () => {
         minHeight: '100dvh',
         overflow: 'hidden',
         backgroundColor: '#1E1B18',
-        cursor: 'pointer',
+        cursor: hasEnded ? 'default' : 'pointer',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         display: 'flex',
@@ -162,7 +221,7 @@ export const Hero: React.FC = () => {
         justifyContent: 'center',
       }}
     >
-      {/* Background Cinematic Video */}
+      {/* Background Cinematic Video - Initially paused, no autoplay */}
       <video
         ref={videoRef}
         playsInline
@@ -221,27 +280,6 @@ export const Hero: React.FC = () => {
               pointerEvents: 'auto',
             }}
           >
-            {/* Pulsing ambient ring */}
-            <motion.div
-              animate={{
-                scale: [1, 1.15, 1],
-                opacity: [0.35, 0.15, 0.35],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-              style={{
-                position: 'absolute',
-                width: '106px',
-                height: '106px',
-                borderRadius: '50%',
-                border: '1px solid rgba(255, 255, 255, 0.5)',
-                pointerEvents: 'none',
-              }}
-            />
-
             {/* Circular Play Button */}
             <button
               type="button"
@@ -279,7 +317,7 @@ export const Hero: React.FC = () => {
               <Play size={30} fill="#FFFFFF" strokeWidth={0} style={{ marginLeft: '4px' }} />
             </button>
 
-            {/* Subtle "Tap to begin" text */}
+            {/* Subtle "TAP TO BEGIN" text */}
             <span
               className="font-sans"
               style={{
@@ -292,15 +330,15 @@ export const Hero: React.FC = () => {
                 textShadow: '0 2px 10px rgba(0, 0, 0, 0.6)',
               }}
             >
-              Tap to begin
+              TAP TO BEGIN
             </span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Paused state overlay cue if user pauses after starting */}
+      {/* Paused state cue if paused during playback */}
       <AnimatePresence>
-        {hasStarted && !isPlaying && !isEnded && !hasError && showControlsHint && (
+        {hasStarted && !isPlaying && !hasEnded && !hasError && showControlsHint && (
           <motion.div
             key="paused-ui"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -351,58 +389,58 @@ export const Hero: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Ended state: subtle replay button and invitation continue prompt */}
+      {/* Ended state: final frame visible and natural scroll cue */}
       <AnimatePresence>
-        {isEnded && !hasError && (
+        {hasEnded && !hasError && (
           <motion.div
-            key="ended-ui"
+            key="ended-controls-ui"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
             style={{
               position: 'absolute',
-              bottom: '36px',
+              bottom: '32px',
               zIndex: 10,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '12px',
+              pointerEvents: 'none',
             }}
           >
-            <button
-              type="button"
-              onClick={handleReplay}
-              aria-label="Replay invitation video"
+            {/* Subtle natural scroll prompt */}
+            <motion.div
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               style={{
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                gap: '8px',
-                padding: '10px 20px',
-                borderRadius: '9999px',
-                backgroundColor: 'rgba(250, 247, 242, 0.88)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(216, 180, 166, 0.4)',
+                gap: '4px',
                 color: '#2C2825',
-                fontSize: '0.75rem',
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                fontWeight: 500,
-                cursor: 'pointer',
-                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.18)',
               }}
             >
-              <RotateCcw size={14} />
-              <span>Replay</span>
-            </button>
+              <span
+                className="font-sans"
+                style={{
+                  fontSize: '0.68rem',
+                  letterSpacing: '0.22em',
+                  textTransform: 'uppercase',
+                  fontWeight: 500,
+                  opacity: 0.8,
+                }}
+              >
+                Scroll to explore
+              </span>
+              <ChevronDown size={16} style={{ opacity: 0.7 }} />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Discrete Audio Indicator if Muted Fallback Triggered */}
       <AnimatePresence>
-        {hasStarted && isMuted && !isEnded && (
+        {hasStarted && isMuted && !hasEnded && (
           <motion.button
             key="unmute-badge"
             type="button"
@@ -436,60 +474,85 @@ export const Hero: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Graceful Fallback Error UI */}
+      {/* Graceful Fallback Error UI with Continue button to prevent trapping user */}
       {hasError && (
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            zIndex: 10,
+            zIndex: 20,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(44, 40, 37, 0.75)',
+            backgroundColor: 'rgba(44, 40, 37, 0.82)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             padding: '24px',
             textAlign: 'center',
+            gap: '16px',
           }}
         >
           <p
             className="font-serif"
             style={{
               color: '#FAF7F2',
-              fontSize: '1.2rem',
-              marginBottom: '18px',
+              fontSize: '1.25rem',
+              maxWidth: '320px',
+              lineHeight: 1.5,
               fontStyle: 'italic',
             }}
           >
-            Our wedding story
+            Unable to play the invitation video.
           </p>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handlePlay();
-            }}
-            style={{
-              padding: '12px 24px',
-              borderRadius: '9999px',
-              backgroundColor: '#FAF7F2',
-              border: 'none',
-              color: '#2C2825',
-              fontSize: '0.8rem',
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-          >
-            Tap to Play
-          </button>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button
+              type="button"
+              onClick={handleContinueToInvitation}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '9999px',
+                backgroundColor: '#FAF7F2',
+                border: 'none',
+                color: '#2C2825',
+                fontSize: '0.78rem',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+              }}
+            >
+              Continue to Invitation
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePlay();
+              }}
+              style={{
+                padding: '12px 20px',
+                borderRadius: '9999px',
+                backgroundColor: 'transparent',
+                border: '1px solid rgba(250, 247, 242, 0.6)',
+                color: '#FAF7F2',
+                fontSize: '0.78rem',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Soft Bottom Transition Gradient blending into #announcement */}
+      {/* Soft Bottom Transition Gradient blending into lower section */}
       <div
         style={{
           position: 'absolute',
@@ -505,3 +568,4 @@ export const Hero: React.FC = () => {
     </section>
   );
 };
+
