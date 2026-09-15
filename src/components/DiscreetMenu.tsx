@@ -47,12 +47,12 @@ export const DiscreetMenu: React.FC<DiscreetMenuProps> = ({ enabled = true }) =>
             style={{
               position: 'fixed',
               top: '20px',
-              right: '20px',
+              right: 'max(16px, calc(50% - 215px + 16px))',
               zIndex: 900,
               width: '44px',
               height: '44px',
               borderRadius: '50%',
-              backgroundColor: 'rgba(250, 247, 242, 0.82)',
+              backgroundColor: 'rgba(250, 247, 242, 0.85)',
               backdropFilter: 'blur(12px)',
               WebkitBackdropFilter: 'blur(12px)',
               border: '1px solid rgba(216, 180, 166, 0.3)',
@@ -69,7 +69,7 @@ export const DiscreetMenu: React.FC<DiscreetMenuProps> = ({ enabled = true }) =>
         )}
       </AnimatePresence>
 
-      {/* Fullscreen Overlay */}
+      {/* Fullscreen Overlay - aligned with 430px mobile canvas on desktop */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -79,9 +79,14 @@ export const DiscreetMenu: React.FC<DiscreetMenuProps> = ({ enabled = true }) =>
             transition={{ duration: 0.4 }}
             style={{
               position: 'fixed',
-              inset: 0,
+              top: 0,
+              bottom: 0,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '100%',
+              maxWidth: '430px',
               zIndex: 899,
-              backgroundColor: 'rgba(250, 247, 242, 0.96)',
+              backgroundColor: 'rgba(250, 247, 242, 0.97)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
               display: 'flex',
@@ -89,6 +94,7 @@ export const DiscreetMenu: React.FC<DiscreetMenuProps> = ({ enabled = true }) =>
               alignItems: 'center',
               justifyContent: 'center',
               padding: '40px 24px',
+              boxShadow: '0 0 50px rgba(44, 40, 37, 0.1)',
             }}
           >
             <motion.div

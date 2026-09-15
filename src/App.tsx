@@ -14,57 +14,51 @@ export const App: React.FC = () => {
   const [hasEnded, setHasEnded] = useState(false);
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        minHeight: '100dvh',
-        backgroundColor: '#FAF7F2',
-        color: '#2C2825',
-        overflowX: 'hidden',
-      }}
-    >
-      {/* Single Discreet Floating Menu (enabled only after video has finished) */}
-      <DiscreetMenu enabled={hasEnded} />
-
-      {/* Floating Dust/Light Particles (subtle background depth) */}
+    <div className="app-viewport">
+      {/* Floating Dust/Light Particles across canvas and background */}
       <FloatingParticles />
 
-      {/* Main Continuous Single-Page Flow */}
-      <main>
-        {/* Section 1: Hero */}
-        <Hero onEnded={() => setHasEnded(true)} />
+      {/* Discreet Floating Menu (docked to mobile canvas on desktop) */}
+      <DiscreetMenu enabled={hasEnded} />
 
-        {/* Lower page content: locked and revealed only after opening video finishes */}
-        <div
-          id="invitation-content"
-          style={{
-            opacity: hasEnded ? 1 : 0,
-            transition: 'opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
-            pointerEvents: hasEnded ? 'auto' : 'none',
-          }}
-        >
-          {/* Section 2: Announcement & Date */}
-          <WeddingAnnouncement />
+      {/* Central Narrow Mobile Invitation Canvas (max-width: 430px) */}
+      <div className="mobile-canvas">
+        <main>
+          {/* Section 1: Hero */}
+          <Hero onEnded={() => setHasEnded(true)} />
 
-          {/* Section 3: Countdown */}
-          <Countdown />
+          {/* Lower page content: locked and revealed only after opening video finishes */}
+          <div
+            id="invitation-content"
+            style={{
+              opacity: hasEnded ? 1 : 0,
+              transition: 'opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
+              pointerEvents: hasEnded ? 'auto' : 'none',
+            }}
+          >
+            {/* Section 2: Announcement & Date */}
+            <WeddingAnnouncement />
 
-          {/* Section 4: Event Timeline */}
-          <Timeline />
+            {/* Section 3: Countdown */}
+            <Countdown />
 
-          {/* Section 5: Location / Venue */}
-          <Venue />
+            {/* Section 4: Event Timeline */}
+            <Timeline />
 
-          {/* Section 6: Quote & Names */}
-          <QuoteAndNames />
+            {/* Section 5: Location / Venue */}
+            <Venue />
 
-          {/* Section 7: Dress Code, RSVP, Calendar & Share */}
-          <DressCodeAndActions />
+            {/* Section 6: Quote & Names */}
+            <QuoteAndNames />
 
-          {/* Section 8: Final Farewell */}
-          <Footer />
-        </div>
-      </main>
+            {/* Section 7: Dress Code, RSVP, Calendar & Share */}
+            <DressCodeAndActions />
+
+            {/* Section 8: Final Farewell */}
+            <Footer />
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

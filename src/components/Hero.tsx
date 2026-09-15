@@ -209,10 +209,12 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp }) => {
       style={{
         position: 'relative',
         width: '100%',
+        maxWidth: '430px',
         height: '100svh',
         minHeight: '100dvh',
         overflow: 'hidden',
         backgroundColor: '#1E1B18',
+        margin: '0 auto',
         cursor: hasEnded ? 'default' : 'pointer',
         userSelect: 'none',
         WebkitUserSelect: 'none',
