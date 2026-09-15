@@ -228,7 +228,7 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp }) => {
         ref={videoRef}
         playsInline
         preload="metadata"
-        poster="/assets/wedding-intro-poster.webp"
+        poster={`${import.meta.env.BASE_URL}assets/wedding-intro-poster.webp`}
         style={{
           position: 'absolute',
           inset: 0,
@@ -239,7 +239,7 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp }) => {
           zIndex: 1,
         }}
       >
-        <source src="/assets/wedding-intro.mp4" type="video/mp4" />
+        <source src={`${import.meta.env.BASE_URL}assets/wedding-intro.mp4`} type="video/mp4" />
         Your browser does not support playing this video.
       </video>
 
