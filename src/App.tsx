@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { DiscreetMenu } from './components/DiscreetMenu';
 import { FloatingParticles } from './components/FloatingParticles';
 import { Hero } from './components/Hero';
@@ -12,9 +12,31 @@ import { Footer } from './components/Footer';
 
 export const App: React.FC = () => {
   const [hasEnded, setHasEnded] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Triggered on the exact same user tap on the play button
+  const startBackgroundAudio = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.muted = false;
+      if (audio.paused) {
+        audio.play().catch((err) => {
+          console.warn('Background wedding audio playback blocked:', err);
+        });
+      }
+    }
+  }, []);
 
   return (
     <div className="app-viewport">
+      {/* Dedicated Persistent Background Wedding Audio - Lives at App root, never unmounts, loops indefinitely */}
+      <audio
+        ref={audioRef}
+        src={`${import.meta.env.BASE_URL}assets/wedding-audio.mp3`}
+        loop
+        preload="auto"
+      />
+
       {/* Floating Dust/Light Particles across canvas and background */}
       <FloatingParticles />
 
@@ -25,7 +47,10 @@ export const App: React.FC = () => {
       <div className="mobile-canvas">
         <main>
           {/* Section 1: Hero */}
-          <Hero onEnded={() => setHasEnded(true)} />
+          <Hero
+            onStartAudio={startBackgroundAudio}
+            onEnded={() => setHasEnded(true)}
+          />
 
           {/* Lower page content: locked and revealed only after opening video finishes */}
           <div

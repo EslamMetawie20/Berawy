@@ -1,12 +1,13 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, VolumeX, ChevronDown } from 'lucide-react';
+import { Play, ChevronDown } from 'lucide-react';
 
 interface HeroProps {
   onEnded?: () => void;
+  onStartAudio?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp }) => {
+export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: onStartAudioProp }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Playback & UI States
@@ -14,7 +15,6 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp }) => {
   const [hasStarted, setHasStarted] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const [showControlsHint, setShowControlsHint] = useState(false);
 
   // Strict scroll lock while video has not completed (hasEnded === false)
@@ -83,36 +83,30 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp }) => {
     }
   }, [hasEnded]);
 
-  // Attempt to play video with audio after user interaction
+  // Start video (permanently muted) and trigger persistent background wedding audio at exact same user interaction
   const handlePlay = useCallback(async () => {
+    // 1. Immediately start persistent background wedding audio from user interaction
+    if (onStartAudioProp) {
+      onStartAudioProp();
+    }
+
     const video = videoRef.current;
     if (!video) return;
 
     setHasError(false);
 
     try {
-      // Primary intent: play with unmuted audio after user gesture
-      video.muted = false;
-      setIsMuted(false);
+      // Intro video must ALWAYS remain completely muted; its original audio must NEVER be heard
+      video.muted = true;
       await video.play();
       setIsPlaying(true);
       setHasStarted(true);
     } catch (err) {
-      console.warn('Playback with sound was blocked; falling back to muted playback:', err);
-      // Fallback: play muted if browser audio policy blocked unmuted playback
-      try {
-        video.muted = true;
-        setIsMuted(true);
-        await video.play();
-        setIsPlaying(true);
-        setHasStarted(true);
-      } catch (fallbackErr) {
-        console.error('Video playback failed completely:', fallbackErr);
-        setHasError(true);
-        setIsPlaying(false);
-      }
+      console.error('Intro video playback failed:', err);
+      setHasError(true);
+      setIsPlaying(false);
     }
-  }, []);
+  }, [onStartAudioProp]);
 
   const handlePause = useCallback(() => {
     const video = videoRef.current;
@@ -144,17 +138,6 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp }) => {
       e.preventDefault();
       handleContainerClick();
     }
-  };
-
-  // Sound toggle (for muted fallback case)
-  const toggleSound = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const video = videoRef.current;
-    if (!video) return;
-
-    const newMuted = !video.muted;
-    video.muted = newMuted;
-    setIsMuted(newMuted);
   };
 
   // Fallback continue to invitation when video cannot play
@@ -223,9 +206,10 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp }) => {
         justifyContent: 'center',
       }}
     >
-      {/* Background Cinematic Video - Initially paused, no autoplay */}
+      {/* Background Cinematic Video - Initially paused, no autoplay, permanently muted */}
       <video
         ref={videoRef}
+        muted={true}
         playsInline
         preload="metadata"
         poster={`${import.meta.env.BASE_URL}assets/wedding-intro-poster.webp`}
@@ -437,42 +421,6 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp }) => {
               <ChevronDown size={16} style={{ opacity: 0.7 }} />
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Discrete Audio Indicator if Muted Fallback Triggered */}
-      <AnimatePresence>
-        {hasStarted && isMuted && !hasEnded && (
-          <motion.button
-            key="unmute-badge"
-            type="button"
-            onClick={toggleSound}
-            aria-label="Enable sound"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            style={{
-              position: 'absolute',
-              top: '24px',
-              left: '24px',
-              zIndex: 15,
-              padding: '8px 14px',
-              borderRadius: '9999px',
-              backgroundColor: 'rgba(0, 0, 0, 0.55)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              color: '#FFFFFF',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.75rem',
-              cursor: 'pointer',
-            }}
-          >
-            <VolumeX size={15} />
-            <span>Tap for sound</span>
-          </motion.button>
         )}
       </AnimatePresence>
 
