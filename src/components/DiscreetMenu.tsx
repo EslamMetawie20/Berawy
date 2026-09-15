@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence, useScroll } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { WEDDING_DETAILS } from '../constants/wedding';
 
 export const DiscreetMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showMenuButton, setShowMenuButton] = useState(false);
+  const { scrollY } = useScroll();
+
+  useEffect(() => {
+    return scrollY.on('change', (latest) => {
+      setShowMenuButton(latest > 240);
+    });
+  }, [scrollY]);
 
   const scrollTo = (id: string) => {
     setIsOpen(false);
@@ -16,36 +24,42 @@ export const DiscreetMenu: React.FC = () => {
 
   return (
     <>
-      {/* Discreet floating trigger button */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1, duration: 0.6 }}
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle Navigation Menu"
-        whileTap={{ scale: 0.92 }}
-        style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          zIndex: 900,
-          width: '44px',
-          height: '44px',
-          borderRadius: '50%',
-          backgroundColor: 'rgba(250, 247, 242, 0.75)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '1px solid rgba(216, 180, 166, 0.3)',
-          color: '#2C2825',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(44, 40, 37, 0.08)',
-        }}
-      >
-        {isOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
-      </motion.button>
+      {/* Discreet floating trigger button - only visible once scrolled past opening video */}
+      <AnimatePresence>
+        {showMenuButton && (
+          <motion.button
+            key="menu-trigger-btn"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle Navigation Menu"
+            whileTap={{ scale: 0.92 }}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '20px',
+              zIndex: 900,
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(250, 247, 242, 0.82)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(216, 180, 166, 0.3)',
+              color: '#2C2825',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(44, 40, 37, 0.08)',
+            }}
+          >
+            {isOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Fullscreen Overlay */}
       <AnimatePresence>

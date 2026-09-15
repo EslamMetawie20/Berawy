@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { LoadingScreen } from './components/LoadingScreen';
+import React from 'react';
 import { DiscreetMenu } from './components/DiscreetMenu';
 import { FloatingParticles } from './components/FloatingParticles';
 import { Hero } from './components/Hero';
@@ -12,8 +11,6 @@ import { DressCodeAndActions } from './components/DressCodeAndActions';
 import { Footer } from './components/Footer';
 
 export const App: React.FC = () => {
-  const [isLoaded, setIsLoaded] = useState(false);
-
   return (
     <div
       style={{
@@ -24,9 +21,6 @@ export const App: React.FC = () => {
         overflowX: 'hidden',
       }}
     >
-      {/* Initial Minimal Loading Overlay */}
-      <LoadingScreen onComplete={() => setIsLoaded(true)} />
-
       {/* Single Discreet Floating Menu */}
       <DiscreetMenu />
 
