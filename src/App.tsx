@@ -13,16 +13,36 @@ export const App: React.FC = () => {
   const [hasEnded, setHasEnded] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Triggered on the exact same user tap on the play button
-  const startBackgroundAudio = useCallback(() => {
+  // Audio control callbacks for intro video synchronization
+  const handleAudioStart = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
       audio.muted = false;
+      audio.currentTime = 0;
       if (audio.paused) {
         audio.play().catch((err) => {
           console.warn('Background wedding audio playback blocked:', err);
         });
       }
+    }
+  }, []);
+
+  const handleAudioResume = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.muted = false;
+      if (audio.paused) {
+        audio.play().catch((err) => {
+          console.warn('Background wedding audio resume blocked:', err);
+        });
+      }
+    }
+  }, []);
+
+  const handleAudioPause = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio && !audio.paused) {
+      audio.pause();
     }
   }, []);
 
@@ -47,7 +67,9 @@ export const App: React.FC = () => {
         <main>
           {/* Section 1: Hero */}
           <Hero
-            onStartAudio={startBackgroundAudio}
+            onAudioStart={handleAudioStart}
+            onAudioResume={handleAudioResume}
+            onAudioPause={handleAudioPause}
             onEnded={() => setHasEnded(true)}
           />
 

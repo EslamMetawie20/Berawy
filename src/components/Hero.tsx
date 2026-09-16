@@ -1,21 +1,37 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, ChevronDown } from 'lucide-react';
+import { Play, ChevronDown, Loader2 } from 'lucide-react';
 
 interface HeroProps {
   onEnded?: () => void;
-  onStartAudio?: () => void;
+  onAudioStart?: () => void;
+  onAudioResume?: () => void;
+  onAudioPause?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: onStartAudioProp }) => {
+export const Hero: React.FC<HeroProps> = ({
+  onEnded: onEndedProp,
+  onAudioStart: onAudioStartProp,
+  onAudioResume: onAudioResumeProp,
+  onAudioPause: onAudioPauseProp,
+}) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Playback & UI States
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [showControlsHint, setShowControlsHint] = useState(false);
+
+  // Refs for reliable event listener closures
+  const hasAudioStartedRef = useRef(false);
+  const hasEndedRef = useRef(false);
+
+  useEffect(() => {
+    hasEndedRef.current = hasEnded;
+  }, [hasEnded]);
 
   // Strict scroll lock while video has not completed (hasEnded === false)
   useEffect(() => {
@@ -41,7 +57,6 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: 
 
       // Prevent touch scroll dragging on mobile
       const preventTouch = (e: TouchEvent) => {
-        // Prevent default touch movement to avoid dragging page under hero
         e.preventDefault();
       };
 
@@ -83,30 +98,25 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: 
     }
   }, [hasEnded]);
 
-  // Start video (permanently muted) and trigger persistent background wedding audio at exact same user interaction
+  // Request video playback (permanently muted) - audio does NOT start here
   const handlePlay = useCallback(async () => {
-    // 1. Immediately start persistent background wedding audio from user interaction
-    if (onStartAudioProp) {
-      onStartAudioProp();
-    }
-
     const video = videoRef.current;
     if (!video) return;
 
     setHasError(false);
+    setIsBuffering(true);
 
     try {
       // Intro video must ALWAYS remain completely muted; its original audio must NEVER be heard
       video.muted = true;
       await video.play();
-      setIsPlaying(true);
-      setHasStarted(true);
     } catch (err) {
       console.error('Intro video playback failed:', err);
       setHasError(true);
+      setIsBuffering(false);
       setIsPlaying(false);
     }
-  }, [onStartAudioProp]);
+  }, []);
 
   const handlePause = useCallback(() => {
     const video = videoRef.current;
@@ -118,6 +128,8 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: 
 
   // Toggle playback when tapping on the video
   const handleContainerClick = () => {
+    if (isBuffering) return; // Prevent spamming while loading
+
     if (!hasStarted) {
       handlePlay();
     } else if (hasEnded) {
@@ -144,42 +156,99 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: 
   const handleContinueToInvitation = (e: React.MouseEvent) => {
     e.stopPropagation();
     setHasEnded(true);
+    hasEndedRef.current = true;
     if (onEndedProp) {
       onEndedProp();
     }
   };
 
-  // Video event synchronization
+  // Video event synchronization - Audio triggers ONLY when video is actually playing
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
+    const onPlaying = () => {
+      setIsBuffering(false);
+      setIsPlaying(true);
+      setHasStarted(true);
+
+      // Trigger audio ONLY when video actually begins frame playback
+      if (!hasEndedRef.current) {
+        if (!hasAudioStartedRef.current) {
+          hasAudioStartedRef.current = true;
+          if (onAudioStartProp) {
+            onAudioStartProp();
+          }
+        } else {
+          if (onAudioResumeProp) {
+            onAudioResumeProp();
+          }
+        }
+      }
+    };
+
+    const onWaiting = () => {
+      if (!hasEndedRef.current) {
+        setIsBuffering(true);
+        if (onAudioPauseProp) {
+          onAudioPauseProp();
+        }
+      }
+    };
+
+    const onStalled = () => {
+      if (!hasEndedRef.current && isPlaying) {
+        setIsBuffering(true);
+        if (onAudioPauseProp) {
+          onAudioPauseProp();
+        }
+      }
+    };
+
+    const onPause = () => {
+      setIsPlaying(false);
+      if (!hasEndedRef.current) {
+        if (onAudioPauseProp) {
+          onAudioPauseProp();
+        }
+      }
+    };
+
     const onVideoEnd = () => {
       setIsPlaying(false);
+      setIsBuffering(false);
       setHasEnded(true);
+      hasEndedRef.current = true;
       if (onEndedProp) {
         onEndedProp();
       }
     };
+
     const onError = () => {
       setHasError(true);
       setIsPlaying(false);
+      setIsBuffering(false);
+      if (!hasEndedRef.current && onAudioPauseProp) {
+        onAudioPauseProp();
+      }
     };
 
-    video.addEventListener('play', onPlay);
+    video.addEventListener('playing', onPlaying);
+    video.addEventListener('waiting', onWaiting);
+    video.addEventListener('stalled', onStalled);
     video.addEventListener('pause', onPause);
     video.addEventListener('ended', onVideoEnd);
     video.addEventListener('error', onError);
 
     return () => {
-      video.removeEventListener('play', onPlay);
+      video.removeEventListener('playing', onPlaying);
+      video.removeEventListener('waiting', onWaiting);
+      video.removeEventListener('stalled', onStalled);
       video.removeEventListener('pause', onPause);
       video.removeEventListener('ended', onVideoEnd);
       video.removeEventListener('error', onError);
     };
-  }, [onEndedProp]);
+  }, [onAudioStartProp, onAudioResumeProp, onAudioPauseProp, onEndedProp]);
 
   return (
     <section
@@ -266,19 +335,20 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: 
               pointerEvents: 'auto',
             }}
           >
-            {/* Circular Play Button */}
+            {/* Circular Play / Loading Button */}
             <button
               type="button"
+              disabled={isBuffering}
               onClick={(e) => {
                 e.stopPropagation();
                 handlePlay();
               }}
-              aria-label="Play wedding invitation video"
+              aria-label={isBuffering ? 'Loading wedding video' : 'Play wedding invitation video'}
               style={{
                 width: '76px',
                 height: '76px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(255, 255, 255, 0.22)',
+                backgroundColor: isBuffering ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.22)',
                 backdropFilter: 'blur(14px)',
                 WebkitBackdropFilter: 'blur(14px)',
                 border: '1px solid rgba(255, 255, 255, 0.55)',
@@ -287,23 +357,37 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: 
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#FFFFFF',
-                cursor: 'pointer',
+                cursor: isBuffering ? 'wait' : 'pointer',
                 outline: 'none',
                 transition: 'transform 0.2s ease, background-color 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.06)';
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.32)';
+                if (!isBuffering) {
+                  e.currentTarget.style.transform = 'scale(1.06)';
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.32)';
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.22)';
+                if (!isBuffering) {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.22)';
+                }
               }}
             >
-              <Play size={30} fill="#FFFFFF" strokeWidth={0} style={{ marginLeft: '4px' }} />
+              {isBuffering ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Loader2 size={30} strokeWidth={2} color="#FFFFFF" />
+                </motion.div>
+              ) : (
+                <Play size={30} fill="#FFFFFF" strokeWidth={0} style={{ marginLeft: '4px' }} />
+              )}
             </button>
 
-            {/* Subtle "TAP TO BEGIN" text */}
+            {/* "TAP TO BEGIN" or "PREPARING..." text */}
             <span
               className="font-sans"
               style={{
@@ -316,7 +400,66 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: 
                 textShadow: '0 2px 10px rgba(0, 0, 0, 0.6)',
               }}
             >
-              TAP TO BEGIN
+              {isBuffering ? 'PREPARING...' : 'TAP TO BEGIN'}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Buffering Indicator Overlay during playback */}
+      <AnimatePresence>
+        {hasStarted && isBuffering && !hasEnded && !hasError && (
+          <motion.div
+            key="mid-play-buffering-ui"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'relative',
+              zIndex: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              pointerEvents: 'none',
+            }}
+          >
+            <div
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.35)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FFFFFF',
+              }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Loader2 size={26} strokeWidth={2} color="#FFFFFF" />
+              </motion.div>
+            </div>
+            <span
+              className="font-sans"
+              style={{
+                marginTop: '12px',
+                fontSize: '0.72rem',
+                letterSpacing: '0.22em',
+                fontWeight: 400,
+                textTransform: 'uppercase',
+                color: 'rgba(255, 255, 255, 0.9)',
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.6)',
+              }}
+            >
+              Buffering...
             </span>
           </motion.div>
         )}
@@ -324,7 +467,7 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: 
 
       {/* Paused state cue if paused during playback */}
       <AnimatePresence>
-        {hasStarted && !isPlaying && !hasEnded && !hasError && showControlsHint && (
+        {hasStarted && !isPlaying && !isBuffering && !hasEnded && !hasError && showControlsHint && (
           <motion.div
             key="paused-ui"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -518,4 +661,5 @@ export const Hero: React.FC<HeroProps> = ({ onEnded: onEndedProp, onStartAudio: 
     </section>
   );
 };
+
 
