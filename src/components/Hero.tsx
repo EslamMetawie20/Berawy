@@ -162,10 +162,18 @@ export const Hero: React.FC<HeroProps> = ({
     }
   };
 
-  // Video event synchronization - Audio triggers ONLY when video is actually playing
+  // Video event synchronization - Audio triggers ONLY when video is actually playing, and NEVER pauses on video end
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    const checkIsEnding = () => {
+      if (!video) return false;
+      return (
+        video.ended ||
+        (video.duration > 0 && video.currentTime >= video.duration - 0.5)
+      );
+    };
 
     const onPlaying = () => {
       setIsBuffering(false);
@@ -188,7 +196,7 @@ export const Hero: React.FC<HeroProps> = ({
     };
 
     const onWaiting = () => {
-      if (!hasEndedRef.current) {
+      if (!hasEndedRef.current && !checkIsEnding()) {
         setIsBuffering(true);
         if (onAudioPauseProp) {
           onAudioPauseProp();
@@ -197,7 +205,7 @@ export const Hero: React.FC<HeroProps> = ({
     };
 
     const onStalled = () => {
-      if (!hasEndedRef.current && isPlaying) {
+      if (!hasEndedRef.current && isPlaying && !checkIsEnding()) {
         setIsBuffering(true);
         if (onAudioPauseProp) {
           onAudioPauseProp();
@@ -207,9 +215,24 @@ export const Hero: React.FC<HeroProps> = ({
 
     const onPause = () => {
       setIsPlaying(false);
-      if (!hasEndedRef.current) {
+      // Native browser videos fire 'pause' immediately before 'ended'.
+      // NEVER pause audio if video is ending or already finished!
+      if (!hasEndedRef.current && !checkIsEnding()) {
         if (onAudioPauseProp) {
           onAudioPauseProp();
+        }
+      }
+    };
+
+    const onTimeUpdate = () => {
+      // Mark as ended slightly before final frame to prevent end-of-video pause race condition
+      if (checkIsEnding() && !hasEndedRef.current) {
+        hasEndedRef.current = true;
+        setHasEnded(true);
+        setIsPlaying(false);
+        setIsBuffering(false);
+        if (onEndedProp) {
+          onEndedProp();
         }
       }
     };
@@ -222,13 +245,14 @@ export const Hero: React.FC<HeroProps> = ({
       if (onEndedProp) {
         onEndedProp();
       }
+      // CRITICAL: DO NOT touch or pause background audio here!
     };
 
     const onError = () => {
       setHasError(true);
       setIsPlaying(false);
       setIsBuffering(false);
-      if (!hasEndedRef.current && onAudioPauseProp) {
+      if (!hasEndedRef.current && !checkIsEnding() && onAudioPauseProp) {
         onAudioPauseProp();
       }
     };
@@ -237,6 +261,7 @@ export const Hero: React.FC<HeroProps> = ({
     video.addEventListener('waiting', onWaiting);
     video.addEventListener('stalled', onStalled);
     video.addEventListener('pause', onPause);
+    video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('ended', onVideoEnd);
     video.addEventListener('error', onError);
 
@@ -245,6 +270,7 @@ export const Hero: React.FC<HeroProps> = ({
       video.removeEventListener('waiting', onWaiting);
       video.removeEventListener('stalled', onStalled);
       video.removeEventListener('pause', onPause);
+      video.removeEventListener('timeupdate', onTimeUpdate);
       video.removeEventListener('ended', onVideoEnd);
       video.removeEventListener('error', onError);
     };
