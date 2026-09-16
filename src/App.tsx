@@ -6,7 +6,6 @@ import { WeddingAnnouncement } from './components/WeddingAnnouncement';
 import { Countdown } from './components/Countdown';
 import { Timeline } from './components/Timeline';
 import { Venue } from './components/Venue';
-import { QuoteAndNames } from './components/QuoteAndNames';
 import { DressCodeAndActions } from './components/DressCodeAndActions';
 import { Footer } from './components/Footer';
 
@@ -73,10 +72,7 @@ export const App: React.FC = () => {
             {/* Section 5: Location / Venue */}
             <Venue />
 
-            {/* Section 6: Quote & Names */}
-            <QuoteAndNames />
-
-            {/* Section 7: Dress Code, RSVP, Calendar & Share */}
+            {/* Section 6: Dress Code, RSVP, Calendar & Share */}
             <DressCodeAndActions />
 
             {/* Section 8: Final Farewell */}

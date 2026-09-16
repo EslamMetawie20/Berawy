@@ -54,7 +54,7 @@ export const WeddingAnnouncement: React.FC = () => {
       style={{
         position: 'relative',
         zIndex: 2,
-        padding: '50px 14px 60px',
+        padding: '30px 14px 30px',
         backgroundColor: '#FAF7F2',
         display: 'flex',
         flexDirection: 'column',
@@ -119,7 +119,7 @@ export const WeddingAnnouncement: React.FC = () => {
               fontWeight: 300,
               fontStyle: 'italic',
               color: '#2C2825',
-              margin: '0 0 24px 0',
+              margin: '0 0 14px 0',
               maxWidth: '260px',
             }}
           >
@@ -132,7 +132,7 @@ export const WeddingAnnouncement: React.FC = () => {
               width: '24px',
               height: '1px',
               backgroundColor: 'rgba(178, 155, 128, 0.5)',
-              marginBottom: '24px',
+              marginBottom: '14px',
             }}
           />
 

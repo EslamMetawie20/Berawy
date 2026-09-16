@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Globe, Mail } from 'lucide-react';
 import { WEDDING_DETAILS } from '../constants/wedding';
 
 interface DiscreetMenuProps {
@@ -30,6 +30,14 @@ export const DiscreetMenu: React.FC<DiscreetMenuProps> = ({ enabled = true }) =>
     }
   };
 
+  const navItems = [
+    { label: 'Invitation', id: 'hero' },
+    { label: 'The Date', id: 'announcement' },
+    { label: 'Our Evening', id: 'timeline' },
+    { label: 'The Venue', id: 'venue' },
+    { label: 'RSVP', id: 'rsvp' },
+  ];
+
   return (
     <>
       {/* Discreet floating trigger button - only visible once scrolled past opening video */}
@@ -52,10 +60,10 @@ export const DiscreetMenu: React.FC<DiscreetMenuProps> = ({ enabled = true }) =>
               width: '44px',
               height: '44px',
               borderRadius: '50%',
-              backgroundColor: 'rgba(250, 247, 242, 0.85)',
+              backgroundColor: 'rgba(250, 247, 242, 0.88)',
               backdropFilter: 'blur(12px)',
               WebkitBackdropFilter: 'blur(12px)',
-              border: '1px solid rgba(216, 180, 166, 0.3)',
+              border: '1px solid rgba(216, 180, 166, 0.35)',
               color: '#2C2825',
               display: 'flex',
               alignItems: 'center',
@@ -76,7 +84,7 @@ export const DiscreetMenu: React.FC<DiscreetMenuProps> = ({ enabled = true }) =>
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.35 }}
             style={{
               position: 'fixed',
               top: 0,
@@ -98,110 +106,142 @@ export const DiscreetMenu: React.FC<DiscreetMenuProps> = ({ enabled = true }) =>
             }}
           >
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              transition={{ delay: 0.1, duration: 0.4 }}
-              style={{ textAlign: 'center', width: '100%', maxWidth: '360px' }}
+              transition={{ delay: 0.08, duration: 0.35 }}
+              style={{
+                textAlign: 'center',
+                width: '100%',
+                maxWidth: '360px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
             >
+              {/* Top Monogram */}
               <div
                 className="font-serif"
                 style={{
-                  fontSize: '2rem',
+                  fontSize: '2.1rem',
                   letterSpacing: '0.15em',
                   color: '#2C2825',
-                  marginBottom: '40px',
+                  marginBottom: '32px',
                 }}
               >
                 {WEDDING_DETAILS.monogram}
               </div>
 
-              <nav style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-                <button
-                  onClick={() => scrollTo('hero')}
-                  className="font-serif"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '1.5rem',
-                    letterSpacing: '0.1em',
-                    color: '#2C2825',
-                    cursor: 'pointer',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Invitation
-                </button>
-                <button
-                  onClick={() => scrollTo('announcement')}
-                  className="font-serif"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '1.5rem',
-                    letterSpacing: '0.1em',
-                    color: '#2C2825',
-                    cursor: 'pointer',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  The Date
-                </button>
-                <button
-                  onClick={() => scrollTo('timeline')}
-                  className="font-serif"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '1.5rem',
-                    letterSpacing: '0.1em',
-                    color: '#2C2825',
-                    cursor: 'pointer',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Our Evening
-                </button>
-                <button
-                  onClick={() => scrollTo('venue')}
-                  className="font-serif"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '1.5rem',
-                    letterSpacing: '0.1em',
-                    color: '#2C2825',
-                    cursor: 'pointer',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  The Venue
-                </button>
-                <button
-                  onClick={() => scrollTo('rsvp')}
-                  className="font-serif"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '1.5rem',
-                    letterSpacing: '0.1em',
-                    color: '#2C2825',
-                    cursor: 'pointer',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  RSVP
-                </button>
+              {/* Main Wedding Navigation */}
+              <nav
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '20px',
+                  alignItems: 'center',
+                  width: '100%',
+                }}
+              >
+                {navItems.map((item) => (
+                  <motion.button
+                    key={item.id}
+                    onClick={() => scrollTo(item.id)}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="font-serif"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '1.4rem',
+                      letterSpacing: '0.12em',
+                      color: '#2C2825',
+                      cursor: 'pointer',
+                      textTransform: 'uppercase',
+                      padding: '4px 12px',
+                      transition: 'color 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#C5A089')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '#2C2825')}
+                  >
+                    {item.label}
+                  </motion.button>
+                ))}
               </nav>
 
+              {/* Delicate Separator */}
               <div
                 style={{
-                  width: '40px',
+                  width: '36px',
                   height: '1px',
-                  backgroundColor: '#C5A089',
-                  margin: '40px auto 0',
+                  backgroundColor: 'rgba(197, 160, 137, 0.4)',
+                  margin: '32px auto 24px',
                 }}
               />
+
+              {/* Discreet Developer Contact Section */}
+              <div
+                className="font-sans"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '0.64rem',
+                    letterSpacing: '0.28em',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    color: '#C5A089',
+                    marginBottom: '2px',
+                  }}
+                >
+                  CONTACT
+                </span>
+
+                <a
+                  href="https://metawie.pages.dev/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: '0.72rem',
+                    letterSpacing: '0.12em',
+                    fontWeight: 600,
+                    color: '#8C7A6B',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    transition: 'color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#2C2825')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#8C7A6B')}
+                >
+                  <Globe size={11} strokeWidth={1.6} style={{ opacity: 0.7 }} />
+                  METAWIE
+                </a>
+
+                <a
+                  href="mailto:eslammetawie@gmail.com"
+                  style={{
+                    fontSize: '0.7rem',
+                    letterSpacing: '0.06em',
+                    color: '#A89B8F',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    transition: 'color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#2C2825')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#A89B8F')}
+                >
+                  <Mail size={11} strokeWidth={1.6} style={{ opacity: 0.7 }} />
+                  eslammetawie@gmail.com
+                </a>
+              </div>
             </motion.div>
           </motion.div>
         )}

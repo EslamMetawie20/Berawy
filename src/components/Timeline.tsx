@@ -33,7 +33,7 @@ export const Timeline: React.FC = () => {
       style={{
         position: 'relative',
         zIndex: 2,
-        padding: '45px 12px 65px',
+        padding: '24px 12px 30px',
         backgroundColor: '#FAF7F2',
         display: 'flex',
         flexDirection: 'column',
@@ -55,7 +55,7 @@ export const Timeline: React.FC = () => {
           borderRadius: '24px',
           border: '1px solid rgba(195, 180, 160, 0.5)',
           boxShadow: '0 20px 50px rgba(55, 45, 35, 0.06), 0 2px 10px rgba(55, 45, 35, 0.03)',
-          padding: '48px 18px 52px',
+          padding: '30px 16px 32px',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
@@ -170,8 +170,8 @@ export const Timeline: React.FC = () => {
           style={{
             position: 'relative',
             zIndex: 3,
-            marginTop: '22px',
-            marginBottom: '26px',
+            marginTop: '12px',
+            marginBottom: '18px',
           }}
         >
           <h2
@@ -193,7 +193,7 @@ export const Timeline: React.FC = () => {
               width: '28px',
               height: '1px',
               backgroundColor: '#B29B80',
-              margin: '8px auto 0',
+              margin: '6px auto 0',
             }}
           />
         </motion.div>
@@ -208,8 +208,8 @@ export const Timeline: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '20px',
-            marginBottom: '16px',
+            gap: '14px',
+            marginBottom: '8px',
           }}
         >
           {events.map((event, idx) => (
@@ -277,7 +277,7 @@ export const Timeline: React.FC = () => {
                     width: '16px',
                     height: '1px',
                     backgroundColor: 'rgba(178, 155, 128, 0.4)',
-                    marginTop: '18px',
+                    marginTop: '12px',
                   }}
                 />
               )}

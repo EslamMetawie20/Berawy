@@ -9,7 +9,7 @@ export const Footer: React.FC = () => {
       style={{
         position: 'relative',
         zIndex: 2,
-        padding: '90px 24px 80px',
+        padding: '40px 20px 40px',
         backgroundColor: '#FDFBF7',
         display: 'flex',
         flexDirection: 'column',
@@ -34,7 +34,7 @@ export const Footer: React.FC = () => {
             textTransform: 'uppercase',
             color: '#C5A089',
             display: 'block',
-            marginBottom: '16px',
+            marginBottom: '12px',
           }}
         >
           See You There
@@ -47,7 +47,7 @@ export const Footer: React.FC = () => {
             fontWeight: 400,
             color: '#2C2825',
             lineHeight: 1.2,
-            marginBottom: '12px',
+            marginBottom: '8px',
           }}
         >
           {WEDDING_DETAILS.coupleNames}
@@ -59,7 +59,7 @@ export const Footer: React.FC = () => {
             fontSize: '1.25rem',
             letterSpacing: '0.2em',
             color: '#5A524C',
-            marginBottom: '40px',
+            marginBottom: '24px',
           }}
         >
           {WEDDING_DETAILS.dateFormatted}
@@ -71,7 +71,7 @@ export const Footer: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '12px',
+            gap: '10px',
           }}
         >
           <span
@@ -107,10 +107,58 @@ export const Footer: React.FC = () => {
               width: '80px',
               height: '1px',
               backgroundColor: '#C5A089',
-              marginTop: '16px',
+              marginTop: '12px',
               transformOrigin: 'center',
             }}
           />
+        </div>
+
+        {/* Subtle Developer Credit */}
+        <div
+          className="font-sans"
+          style={{
+            marginTop: '36px',
+            paddingTop: '20px',
+            borderTop: '1px solid rgba(216, 180, 166, 0.18)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '0.68rem',
+            letterSpacing: '0.08em',
+            color: '#9E948C',
+          }}
+        >
+          <div>
+            Designed &amp; Developed by{' '}
+            <a
+              href="https://metawie.pages.dev/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: '#8C7A6B',
+                fontWeight: 600,
+                textDecoration: 'none',
+                transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#2C2825')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#8C7A6B')}
+            >
+              METAWIE
+            </a>
+          </div>
+          <a
+            href="mailto:eslammetawie@gmail.com"
+            style={{
+              color: '#A89B8F',
+              textDecoration: 'none',
+              transition: 'color 0.2s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#2C2825')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#A89B8F')}
+          >
+            eslammetawie@gmail.com
+          </a>
         </div>
       </motion.div>
     </footer>

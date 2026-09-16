@@ -91,7 +91,7 @@ export const DressCodeAndActions: React.FC = () => {
       style={{
         position: 'relative',
         zIndex: 2,
-        padding: '70px 24px 80px',
+        padding: '30px 20px 32px',
         backgroundColor: '#FAF7F2',
         display: 'flex',
         flexDirection: 'column',
@@ -138,7 +138,7 @@ export const DressCodeAndActions: React.FC = () => {
         style={{ maxWidth: '500px', width: '100%' }}
       >
         {/* Dress Code Section */}
-        <div style={{ marginBottom: '64px' }}>
+        <div style={{ marginBottom: '28px' }}>
           <span
             className="font-sans"
             style={{
@@ -148,7 +148,7 @@ export const DressCodeAndActions: React.FC = () => {
               textTransform: 'uppercase',
               color: '#C5A089',
               display: 'block',
-              marginBottom: '12px',
+              marginBottom: '10px',
             }}
           >
             Dress Code
@@ -160,7 +160,7 @@ export const DressCodeAndActions: React.FC = () => {
               fontSize: '1.65rem',
               fontWeight: 400,
               color: '#2C2825',
-              marginBottom: '8px',
+              marginBottom: '6px',
             }}
           >
             Elegant Evening Wear
@@ -172,7 +172,7 @@ export const DressCodeAndActions: React.FC = () => {
               fontSize: '0.9rem',
               color: '#5A524C',
               fontWeight: 300,
-              marginBottom: '24px',
+              marginBottom: '18px',
             }}
           >
             Come dressed to celebrate, dance and make beautiful memories with us.
@@ -209,7 +209,7 @@ export const DressCodeAndActions: React.FC = () => {
             width: '50px',
             height: '1px',
             backgroundColor: 'rgba(197, 160, 137, 0.4)',
-            margin: '0 auto 60px',
+            margin: '0 auto 28px',
           }}
         />
 
@@ -224,7 +224,7 @@ export const DressCodeAndActions: React.FC = () => {
               textTransform: 'uppercase',
               color: '#C5A089',
               display: 'block',
-              marginBottom: '12px',
+              marginBottom: '10px',
             }}
           >
             Will You Join Us?
@@ -236,7 +236,7 @@ export const DressCodeAndActions: React.FC = () => {
               fontSize: '1.25rem',
               fontStyle: 'italic',
               color: '#5A524C',
-              marginBottom: '32px',
+              marginBottom: '20px',
             }}
           >
             Your presence would make our day even more special.
